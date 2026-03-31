@@ -2,16 +2,14 @@
  * Utility to make player crawl for shooting.
  * Packaged with `gun` since this automatically handles gun ads
  * models when starting/stopping crawling.
- * 
- * Based on GSit method:
+ * * Based on GSit method:
  * - If block above is air, put a fake barrier above player
  * - Else uses a fake shulker entity above player which forces player into
  * crawling position (since shulker is like a block)
- *   HOWEVER, shulker HEAD will NEVER BE INVISIBLE so looks ugly...
+ * HOWEVER, shulker HEAD will NEVER BE INVISIBLE so looks ugly...
  * https://github.com/Gecolay/GSit/blob/main/v1_18_R2/src/main/java/dev/geco/gsit/mcv/v1_18_R2/objects/GCrawl.java
  * https://github.com/Gecolay/GSit/blob/main/v1_18_R2/src/main/java/dev/geco/gsit/mcv/v1_18_R2/objects/BoxEntity.java
- * 
- * NOTE: instantly kills player if jumping...need to cancel jump damage.
+ * * NOTE: instantly kills player if jumping...need to cancel jump damage.
  */
 
 package phonon.xc.gun.crawl
@@ -40,7 +38,8 @@ import phonon.xc.item.getGunInHand
 import phonon.xc.item.getGunFromItem
 import phonon.xc.util.progressBar10
 // nms version specific imports
-import phonon.xc.nms.gun.crawl.BoxEntity
+// FIX: Updated package to match where we put the NMS BoxEntity class
+import phonon.xc.nms.gun.BoxEntity
 
 
 /**
@@ -77,11 +76,11 @@ public data class Crawling(
     /**
      * Update current crawl state to a new location.
      */
-    public fun update(newLocation: Location, forceUpdate: Boolean = false): Crawling {        
+    public fun update(newLocation: Location, forceUpdate: Boolean = false): Crawling {
         val newBlAboveX = newLocation.getBlockX()
         val newBlAboveY = newLocation.getBlockY() + 1
         val newBlAboveZ = newLocation.getBlockZ()
-        
+
         // if block location changed and previous material was air, cleanup barrier
         if ( this.blAboveMaterial == Material.AIR ) {
             if ( newBlAboveX != blAboveX || newBlAboveY != blAboveY || newBlAboveZ != blAboveZ ) {
@@ -94,9 +93,9 @@ public data class Crawling(
         }
 
         val yHeightInBlock = newLocation.getY() - floor(newLocation.getY())
-        
+
         val newBlAboveMaterial = player.getWorld().getBlockAt(newBlAboveX, newBlAboveY, newBlAboveZ).getType()
-        
+
         // only use barrier block if player < 0.5 height in block and block above is air
         val useBarrierBlock = yHeightInBlock < 0.5 && newBlAboveMaterial == Material.AIR
 
@@ -115,7 +114,7 @@ public data class Crawling(
                 boxEntity.moveAboveLocation(newLocation)
 
                 this.boxEntity.sendMovePacket(this.player)
-                
+
                 // if y location changed, must also update peek using metadata packet
                 if ( newLocation.y != prevLocationY || forceUpdate ) {
                     this.boxEntity.sendPeekMetadataPacket(this.player)
@@ -132,7 +131,7 @@ public data class Crawling(
 
             boxEntity
         }
-    
+
         return Crawling(
             tickId = this.tickId,
             player = this.player,
@@ -176,7 +175,7 @@ public data class Crawling(
 // internal fun resetFovPacket(player: Player) {
 //     val protocolManager = ProtocolLibrary.getProtocolManager()
 //     val packet = protocolManager.createPacket(PacketType.Play.Server.ABILITIES)
-    
+
 //     // is creative
 //     packet.getBooleans().write(0, false)
 //     // is flying
@@ -195,16 +194,16 @@ public data class Crawling(
 
 
 /**
- * Initializes a crawl state for a player 
+ * Initializes a crawl state for a player
  */
 public fun XC.forceCrawl(player: Player): Crawling {
     val playerLocation = player.getLocation()
     val blAboveX = playerLocation.getBlockX()
     val blAboveY = playerLocation.getBlockY() + 1
     val blAboveZ = playerLocation.getBlockZ()
-    
+
     val yHeightInBlock = playerLocation.getY() - floor(playerLocation.getY())
-    
+
     val blAboveMaterial = player.getWorld().getBlockAt(blAboveX, blAboveY, blAboveZ).getType()
 
     // only use barrier block if player < 0.5 height in block and block above is air
@@ -257,9 +256,11 @@ public value class CrawlStop(
 )
 
 // Slowness effect while crawling. Max potion amplifier should be 255 i think... (ambient = true, particles = false)
-private val SLOWNESS_EFFECT: PotionEffect = PotionEffect(PotionEffectType.SLOW, Int.MAX_VALUE, 255, true, false)
+// FIX: SLOW -> SLOWNESS
+private val SLOWNESS_EFFECT: PotionEffect = PotionEffect(PotionEffectType.SLOWNESS, Int.MAX_VALUE, 255, true, false)
 // No jump effect: when jump negative, prevents player from jumping (ambient = true, particles = false)
-private val NO_JUMP_EFFECT: PotionEffect = PotionEffect(PotionEffectType.JUMP, Int.MAX_VALUE, -128, true, false)
+// FIX: JUMP -> JUMP_BOOST
+private val NO_JUMP_EFFECT: PotionEffect = PotionEffect(PotionEffectType.JUMP_BOOST, Int.MAX_VALUE, -128, true, false)
 
 /**
  * Process start crawl requests for players. Returns new queue for next tick.
@@ -312,8 +313,7 @@ internal fun XC.startCrawlSystem(
 
 /**
  * Process stop crawl requests for players. Returns new queue for next tick.
- * 
- * NOTE BUG: when player toggles shift, it will cancel crawl
+ * * NOTE BUG: when player toggles shift, it will cancel crawl
  * However, if async crawl-to-shoot request task is still running, it could
  * complete after a stop request added to this system. Occurs if player stop
  * crawling immediately as crawl timer is finishing. This would be extremely
@@ -331,7 +331,8 @@ internal fun XC.stopCrawlSystem(
             val playerId = player.getUniqueId()
 
             // player.removePotionEffect(PotionEffectType.SLOW)
-            player.removePotionEffect(PotionEffectType.JUMP)
+            // FIX: JUMP -> JUMP_BOOST
+            player.removePotionEffect(PotionEffectType.JUMP_BOOST)
             player.setWalkSpeed(0.2f) // default speed
 
             crawling.remove(playerId)?.cleanup()
@@ -347,7 +348,7 @@ internal fun XC.stopCrawlSystem(
                     }
                 }, 0L)
             }
-            
+
             // remove flag that player crawling and ready to shoot
             crawlingAndReadyToShoot.remove(playerId)
 
@@ -386,7 +387,7 @@ internal fun XC.crawlRefreshSystem(
     crawlStopQueue: ArrayList<CrawlStop>,
 ) {
     val newCrawlingState = HashMap<UUID, Crawling>()
-    
+
     // update crawl refresh tick counter (oscillate between 0,1,0,1,...)
     crawlRefreshTickCounter = (crawlRefreshTickCounter + 1) and 1
 
@@ -406,13 +407,13 @@ internal fun XC.crawlRefreshSystem(
                 _boxEntity,
             ) = prevCrawlState
 
-            
+
             // not needed, toggle event should cancel stop swimming event
             // player.setSwimming(true)
-            
+
             // if == refresh counter, do full refresh system
             if ( tickId == crawlRefreshTickCounter ) {
-                
+
                 // if player location has changed or block above changed, send crawl update packet
                 val currLocation = player.getLocation()
                 val currBlockAboveMaterial = currLocation.world?.getBlockAt(blAboveX, blAboveY, blAboveZ)?.getType() ?: Material.AIR
@@ -439,7 +440,7 @@ internal fun XC.crawlRefreshSystem(
             } else { // just copy crawl state to next tick
                 newCrawlingState[player.getUniqueId()] = prevCrawlState
             }
-            
+
 
             // if only allowed to crawl while using a crawl required weapon,
             // check if player using a crawl weapon.
@@ -508,7 +509,7 @@ internal fun XC.requestCrawlToShootSystem(
             if ( previousTask != null && timestamp < (previousTask.startTimestamp + 2000)  ) {
                 continue
             }
-            
+
             // Do redundant player main hand is gun check here
             // since events could override the first shoot event, causing
             // inventory slot or item to change
@@ -534,7 +535,7 @@ internal fun XC.requestCrawlToShootSystem(
             // being used to start crawl and to shoot
             val crawlId = this.newCrawlToShootId()
             itemData.set(this.namespaceKeyItemCrawlToShootId, PersistentDataType.INTEGER, crawlId)
-            
+
             // update item meta with new data
             item.setItemMeta(itemMeta)
             equipment.setItem(inventorySlot, item)
@@ -553,7 +554,7 @@ internal fun XC.requestCrawlToShootSystem(
 
             // runs every 2 ticks = 100 ms
             task.runTaskTimerAsynchronously(this.plugin, 0L, 1L)
-            
+
             crawlRequestTasks[playerId] = task
         }
         catch ( e: Exception ) {
@@ -575,7 +576,7 @@ internal class CrawlToShootRequestTask(
     val finishTaskQueue: BlockingQueue<CrawlToShootRequestFinish>,
     val cancelTaskQueue: BlockingQueue<CrawlToShootRequestCancel>,
 ): BukkitRunnable() {
-    
+
     private fun cancelTask() {
         cancelTaskQueue.add(CrawlToShootRequestCancel(player))
         this.cancel()
@@ -587,7 +588,7 @@ internal class CrawlToShootRequestTask(
             this.cancelTask()
             return
         }
-        
+
         // check if item swapped
         val itemInHand = player.getInventory().getItemInMainHand()
         if ( itemInHand.getType() != itemGunMaterial ) {
@@ -708,7 +709,7 @@ internal fun XC.cancelCrawlToShootRequestSystem(
         if ( crawling.contains(player.getUniqueId()) ) {
             crawlStopQueue.add(CrawlStop(player))
         }
-        
+
         // clear crawl to shoot progress bar
         Message.announcement(player, "")
     }

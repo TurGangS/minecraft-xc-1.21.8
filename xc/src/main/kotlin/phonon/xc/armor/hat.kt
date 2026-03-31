@@ -11,9 +11,11 @@ import kotlin.math.max
 import org.tomlj.Toml
 import org.bukkit.ChatColor
 import org.bukkit.NamespacedKey
+import org.bukkit.Registry
 import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.inventory.EquipmentSlot
+import org.bukkit.inventory.EquipmentSlotGroup
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 import org.bukkit.attribute.Attribute
@@ -40,27 +42,29 @@ public data class Hat(
      */
     public override fun toItemStack(xc: XC): ItemStack {
         val item = ItemStack(xc.config.materialArmor, 1)
-        val itemMeta = item.getItemMeta()
-        
+        val itemMeta = item.itemMeta ?: return item
+
         // name
         itemMeta.setDisplayName("${ChatColor.RESET}${this.itemName}")
-        
+
         // model
         itemMeta.setCustomModelData(this.itemModel)
 
         // lore
-        itemMeta.setLore(this.itemLore)
+        itemMeta.lore = this.itemLore
 
         // set armor
+        // FIX: Update AttributeModifier to use NamespacedKey and EquipmentSlotGroup (1.21)
         val modifier = AttributeModifier(
-            UUID.randomUUID(),
-            "armor_helmet",
+            NamespacedKey.minecraft("armor_helmet"),
             this.armor,
             AttributeModifier.Operation.ADD_NUMBER,
-            EquipmentSlot.HEAD,
+            EquipmentSlotGroup.HEAD,
         )
-        itemMeta.addAttributeModifier(Attribute.GENERIC_ARMOR, modifier)
-        
+
+        // FIX: GENERIC_ARMOR -> ARMOR
+        itemMeta.addAttributeModifier(Attribute.ARMOR, modifier)
+
         itemMeta.removeItemFlags(ItemFlag.HIDE_ATTRIBUTES)
 
         // apply enchantments
@@ -68,7 +72,7 @@ public data class Hat(
             itemMeta.addEnchant(enchant, level, true) // ignores enchant level restricts
         }
 
-        item.setItemMeta(itemMeta)
+        item.itemMeta = itemMeta
 
         return item
     }
@@ -77,12 +81,6 @@ public data class Hat(
     companion object {
         /**
          * Parse and return all Hats specified in a `hat.toml` config file.
-         * This returns a list of hats since format allows each file to
-         * specify multiple hats in an array of tables. This is because
-         * most hats config is small and are nearly identical.
-         * 
-         * Return null list if any hat fails to parse.if something fails
-         * or no file found.
          */
         public fun listFromToml(source: Path, logger: Logger? = null): List<Hat>? {
             val hats = ArrayList<Hat>()
@@ -103,12 +101,13 @@ public data class Hat(
                         tomlHat.getLong("model")?.let { properties["itemModel"] = it.toInt() }
                         tomlHat.getArray("lore")?.let { properties["itemLore"] = it.toList().map { s -> s.toString() } }
                         tomlHat.getDouble("armor")?.let { properties["armor"] = it }
-                        
+
                         // parse enchantments
                         tomlHat.getTable("enchants")?.let { enchantTable ->
                             val enchants = HashMap<Enchantment, Int>()
                             for ( key in enchantTable.keySet() ) {
-                                val en = Enchantment.getByKey(NamespacedKey.minecraft(key));
+                                // FIX: Use Registry.ENCHANTMENT instead of Enchantment.getByKey
+                                val en = Registry.ENCHANTMENT.get(NamespacedKey.minecraft(key))
                                 if ( en != null ) {
                                     val level = enchantTable.getLong(key)?.toInt()
                                     if ( level != null ) {
@@ -160,8 +159,8 @@ internal fun XC.wearHatSystem(
     for ( request in wearHatRequests ) {
         try {
             val player = request.player
-            val playerId = player.getUniqueId()
-            
+            val playerId = player.uniqueId
+
             if ( playerHandled.add(playerId) == false ) {
                 // false if already contained in set
                 continue
@@ -175,14 +174,14 @@ internal fun XC.wearHatSystem(
                 continue
             }
 
-            val playerInventory = player.getInventory()
-            val newHelmet = playerInventory.getItemInMainHand()
-            val currHelmet = playerInventory.getHelmet()
+            val playerInventory = player.inventory
+            val newHelmet = playerInventory.itemInMainHand
+            val currHelmet = playerInventory.helmet
             playerInventory.setItemInMainHand(currHelmet)
-            playerInventory.setHelmet(newHelmet)
+            playerInventory.helmet = newHelmet
 
             // equip sound
-            player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_IRON, 1f, 1f)
+            player.playSound(player.location, Sound.ITEM_ARMOR_EQUIP_IRON, 1f, 1f)
         } catch (e: Exception) {
             e.printStackTrace()
             this.logger.severe("Failed to handle player wear hat request: ${e}")

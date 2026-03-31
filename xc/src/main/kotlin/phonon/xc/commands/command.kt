@@ -93,7 +93,7 @@ public class Command(
     }
 
     private fun printHelp(sender: CommandSender?) {
-        Message.print(sender, "[xc] for Mineman 1.16.5")
+        Message.print(sender, "[xc] for TurGangS 1.21.8")
         Message.print(sender, "/xc help: help")
         Message.print(sender, "/xc reload: reload plugin config and item configs")
 

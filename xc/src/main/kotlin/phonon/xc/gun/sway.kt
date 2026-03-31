@@ -46,16 +46,42 @@ public fun XC.calculateSway(
     }
 
     // player riding a mount:
-    player.getVehicle()?.let { mount ->
-        if ( mount.type == EntityType.ARMOR_STAND ) {
+// player riding a mount:
+    player.vehicle?.let { mount ->
+        val type = mount.type
+        if (type == EntityType.ARMOR_STAND) {
             sway *= gun.swayRideArmorStand
-        } else if ( mount.type == EntityType.BOAT ) {
+        } else if (
+        // Hardcoded 1.21 Boat variants
+            type == EntityType.OAK_BOAT ||
+            type == EntityType.SPRUCE_BOAT ||
+            type == EntityType.BIRCH_BOAT ||
+            type == EntityType.JUNGLE_BOAT ||
+            type == EntityType.ACACIA_BOAT ||
+            type == EntityType.DARK_OAK_BOAT ||
+            type == EntityType.MANGROVE_BOAT ||
+            type == EntityType.CHERRY_BOAT ||
+            type == EntityType.PALE_OAK_BOAT ||
+            type == EntityType.BAMBOO_RAFT ||
+            // Hardcoded Chest Boat variants
+            type == EntityType.OAK_CHEST_BOAT ||
+            type == EntityType.SPRUCE_CHEST_BOAT ||
+            type == EntityType.BIRCH_CHEST_BOAT ||
+            type == EntityType.JUNGLE_CHEST_BOAT ||
+            type == EntityType.ACACIA_CHEST_BOAT ||
+            type == EntityType.DARK_OAK_CHEST_BOAT ||
+            type == EntityType.MANGROVE_CHEST_BOAT ||
+            type == EntityType.CHERRY_CHEST_BOAT ||
+            type == EntityType.PALE_OAK_CHEST_BOAT ||
+            type == EntityType.BAMBOO_CHEST_RAFT
+        ) {
             sway *= gun.swayRideBoat
-        } else { // apply horse modifier (generic entity mount)
+        } else {
+            // apply horse modifier (generic entity mount)
             sway *= gun.swayRideHorse
         }
     }
-    
+
     return sway
 }
 

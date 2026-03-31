@@ -255,8 +255,8 @@ private fun XC.cleanupGunMeta(
 
     // SET GUN ATTACK SPEED SETTING
     // (to match gun shoot delay)
-    itemMeta.removeAttributeModifier(Attribute.GENERIC_ATTACK_SPEED)
-    itemMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, gun.attackSpeedAttributeModifier)
+    itemMeta.removeAttributeModifier(Attribute.ATTACK_SPEED)
+    itemMeta.addAttributeModifier(Attribute.ATTACK_SPEED, gun.attackSpeedAttributeModifier)
 
     return setGunItemMetaModel(itemMeta, gun, ammoCurrent, aimdownsights)
 }
@@ -1796,16 +1796,18 @@ private fun inventoryRemoveItem(
 
                 for ( i in indicesToRemove ) {
                     val item = items[i]
-                    val itemAmount = item.getAmount()           
-                    if ( itemAmount > amountToRemove ) {
-                        item.setAmount(itemAmount - amountToRemove)
-                        inventory.setItem(i, item)
-                        break
-                    } else {
-                        inventory.setItem(i, null)
-                        amountToRemove -= itemAmount
-                        if ( amountToRemove <= 0 ) {
+                    if(item != null) {  // null check to shut kotlin up.
+                        val itemAmount = item.getAmount()
+                        if (itemAmount > amountToRemove) {
+                            item.setAmount(itemAmount - amountToRemove)
+                            inventory.setItem(i, item)
                             break
+                        } else {
+                            inventory.setItem(i, null)
+                            amountToRemove -= itemAmount
+                            if (amountToRemove <= 0) {
+                                break
+                            }
                         }
                     }
                 }

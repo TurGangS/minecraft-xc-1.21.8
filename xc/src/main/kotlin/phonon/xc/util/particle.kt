@@ -1,6 +1,11 @@
 /**
  * Contains particle wrappers for spawning particles
  * and runnable tasks for spawning particles.
+ * * 1.21 UPDATES:
+ * - EXPLOSION_HUGE -> EXPLOSION_EMITTER
+ * - EXPLOSION_NORMAL -> EXPLOSION
+ * - REDSTONE -> DUST
+ * - BLOCK_CRACK -> BLOCK
  */
 
 package phonon.xc.util.particle
@@ -11,7 +16,6 @@ import org.bukkit.Color
 import org.bukkit.Particle
 import org.bukkit.Particle.DustOptions
 import org.bukkit.block.data.BlockData
-
 
 /**
  * Simplified wrapper for particle data.
@@ -24,14 +28,15 @@ public data class ParticlePacket(
     val randomZ: Double,
     val force: Boolean,
 ) {
-    
+
     companion object {
         /**
          * Placeholder packet for standard explosion.
          */
         public fun placeholderExplosion(): ParticlePacket {
             return ParticlePacket(
-                particle = Particle.EXPLOSION_HUGE,
+                // 1.21: EXPLOSION_HUGE is now EXPLOSION_EMITTER
+                particle = Particle.EXPLOSION_EMITTER,
                 count = 1,
                 randomX = 0.0,
                 randomY = 0.0,
@@ -45,7 +50,8 @@ public data class ParticlePacket(
          */
         public fun placeholderImpact(): ParticlePacket {
             return ParticlePacket(
-                particle = Particle.EXPLOSION_NORMAL,
+                // 1.21: EXPLOSION_NORMAL is now EXPLOSION
+                particle = Particle.EXPLOSION,
                 count = 6,
                 randomX = 0.25,
                 randomY = 0.25,
@@ -85,7 +91,8 @@ public class TaskSpawnParticleBulletTrails(
 ): Runnable {
     override fun run() {
         for ( p in particles ) {
-            val particleData = if ( p.particle == Particle.REDSTONE ) {
+            // 1.21: REDSTONE is now DUST
+            val particleData = if ( p.particle == Particle.DUST ) {
                 p.particleData
             } else {
                 null
@@ -119,7 +126,7 @@ public class TaskSpawnParticleBulletTrails(
                 x += dx
                 y += dy
                 z += dz
-                
+
                 r += p.spacing
                 dist += p.spacing
             }
@@ -150,7 +157,8 @@ public class TaskSpawnParticleBulletBlockImpacts(
     override fun run() {
         for ( p in particles ) {
             p.world.spawnParticle(
-                Particle.BLOCK_CRACK,
+                // 1.21: BLOCK_CRACK is now BLOCK
+                Particle.BLOCK,
                 p.x,
                 p.y,
                 p.z,
@@ -165,7 +173,8 @@ public class TaskSpawnParticleBulletBlockImpacts(
 
             // white dust
             p.world.spawnParticle(
-                Particle.REDSTONE,
+                // 1.21: REDSTONE is now DUST
+                Particle.DUST,
                 p.x,
                 p.y,
                 p.z,
@@ -287,7 +296,8 @@ public class TaskSpawnParticleExplosionTrans(
                 val col = colors[i % colors.size]
 
                 p.world.spawnParticle(
-                    Particle.REDSTONE,
+                    // 1.21: REDSTONE is now DUST
+                    Particle.DUST,
                     px,
                     py,
                     pz,

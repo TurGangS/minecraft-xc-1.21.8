@@ -115,7 +115,7 @@ passthrough_doors = false  # make bullet pass through doors + trapdoors
 
 # projectile particle trail properties
 [projectile.particles]
-type = "REDSTONE"
+type = "DUST"
 size = 0.35
 color = [0, 255, 0] # [r,g,b] in 0-255
 spacing = 1.5
@@ -123,7 +123,7 @@ force_render = true
 block_hit_particles = true # particles on block hit
 
 [projectile.impact_particles]
-type = "EXPLOSION_NORMAL"
+type = "EXPLOSION"
 count = 6
 random_x = 0.25
 random_y = 0.25
@@ -144,7 +144,7 @@ block_damage_power = 2.0
 
 # Explosion particle settings
 [explosion.particles]
-type = "EXPLOSION_NORMAL"
+type = "EXPLOSION"
 count = 8
 random_x = 0.5
 random_y = 0.5

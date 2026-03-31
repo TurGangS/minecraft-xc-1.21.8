@@ -82,8 +82,8 @@ public data class Hitbox(
         z: Float,
     ): Boolean {
         return x >= xmin && x <= xmax &&
-            y >= ymin && y <= ymax &&
-            z >= zmin && z <= zmax
+                y >= ymin && y <= ymax &&
+                z >= zmin && z <= zmax
     }
 
     /**
@@ -127,12 +127,11 @@ public data class Hitbox(
 
         return tmax >= max(0f, tmin)
     }
-    
+
     /**
      * Return ray-AABB intersection using slab method, based on:
      * https://tavianator.com/cgit/dimension.git/tree/libdimension/bvh/bvh.c#n196
-     * 
-     * Unlike `intersectsRay`, this does same thing but returns the
+     * * Unlike `intersectsRay`, this does same thing but returns the
      * intersection distance in ray space if it intersects.
      * Otherwise, returns null.
      */
@@ -146,13 +145,6 @@ public data class Hitbox(
         rInvDirY: Float,
         rInvDirZ: Float,
     ): Float? {
-        // This is actually correct, even though it appears not to handle edge cases
-        // (ray.n.{x,y,z} == 0).  It works because the infinities that result from
-        // dividing by zero will still behave correctly in the comparisons.  Rays
-        // which are parallel to an axis and outside the box will have tmin == inf
-        // or tmax == -inf, while rays inside the box will have tmin and tmax
-        // unchanged.
-
         val tx1 = (this.xmin - rx) * rInvDirX
         val tx2 = (this.xmax - rx) * rInvDirX
 
@@ -184,12 +176,12 @@ public data class Hitbox(
         val dy = y - this.ycenter
         val dz = z - this.zcenter
         return sqrt((dx * dx) + (dy * dy) + (dz * dz))
-    
+
     }
     /**
      * Return distance to line from (ax, ay, az) point and
      * line direction vector components (nx, ny, nz), where
-     *     line = (ax, ay, az) + t * (nx, ny, nz).
+     * line = (ax, ay, az) + t * (nx, ny, nz).
      * https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Vector_formulation
      */
     public fun distanceToLine(
@@ -205,7 +197,7 @@ public data class Hitbox(
         val pxax = this.xcenter - ax
         val pyay = this.ycenter - ay
         val pzaz = this.zcenter - az
-        
+
         // dot product (p - a) . n
         val paDotN = pxax * nx + pyay * ny + pzaz * nz
 
@@ -278,9 +270,9 @@ public data class Hitbox(
             // if player, must adjust for sneak
             if ( entity.type == EntityType.PLAYER ) {
                 val playerEntity = entity as Player
-                if ( playerEntity.isSneaking() ) {
+                if ( playerEntity.isSneaking ) { // 1.21: isSneaking() -> isSneaking
                     ymax -= 0.2f
-                } else if ( playerEntity.isSwimming() ) {
+                } else if ( playerEntity.isSwimming ) { // 1.21: isSwimming() -> isSwimming
                     ymax = ymin + 0.9f
                 }
             }
@@ -291,7 +283,7 @@ public data class Hitbox(
 
             // calculate radiuses
             val radiusMin = size.radiusMin
-            
+
             return Hitbox(
                 entity,
                 xmin,
@@ -312,7 +304,7 @@ public data class Hitbox(
          */
         internal fun defaultEntityHitboxSizes(): EnumArrayMap<EntityType, HitboxSize> {
             val map = EnumArrayMap.from<EntityType, HitboxSize>({_ -> HitboxSize(0f, 0f, 0f, 0f)})
-            
+
             // each value is (x/2, z/2, y, y_offset)
 
             // most important! :D NOTE: this is when not sneaking, while sneaking need custom offset...
@@ -326,7 +318,7 @@ public data class Hitbox(
             map[EntityType.PIG] = HitboxSize(0.55f, 0.55f, 1.0f, -0.1f)
             map[EntityType.SHEEP] = HitboxSize(0.55f, 0.55f, 1.4f, -0.1f)
             map[EntityType.COW] = HitboxSize(0.55f, 0.55f, 1.5f, -0.1f)
-            map[EntityType.MUSHROOM_COW] = HitboxSize(0.55f, 0.55f, 1.5f, -0.1f)
+            map[EntityType.MOOSHROOM] = HitboxSize(0.55f, 0.55f, 1.5f, -0.1f) // FIX: MUSHROOM_COW -> MOOSHROOM
             map[EntityType.CHICKEN] = HitboxSize(0.3f, 0.3f, 0.8f, -0.1f)
             map[EntityType.SQUID] = HitboxSize(0.5f, 0.5f, 0.9f, -0.1f)
             map[EntityType.CAT] = HitboxSize(0.4f, 0.4f, 0.8f, -0.1f)
@@ -337,7 +329,7 @@ public data class Hitbox(
             map[EntityType.WANDERING_TRADER] = HitboxSize(0.4f, 0.4f, 2.05f, -0.1f)
             map[EntityType.TRADER_LLAMA] = HitboxSize(0.55f, 0.55f, 1.97f, -0.1f)
             map[EntityType.LLAMA] = HitboxSize(0.55f, 0.55f, 1.97f, -0.1f)
-            map[EntityType.SNOWMAN] = HitboxSize(0.45f, 0.45f, 2.0f, -0.1f)
+            map[EntityType.SNOW_GOLEM] = HitboxSize(0.45f, 0.45f, 2.0f, -0.1f) // FIX: SNOWMAN -> SNOW_GOLEM
             map[EntityType.BEE] = HitboxSize(0.45f, 0.45f, 0.7f, -0.1f)
             map[EntityType.PARROT] = HitboxSize(0.35f, 0.35f, 1.0f, -0.1f)
             map[EntityType.FOX] = HitboxSize(0.4f, 0.4f, 0.8f, -0.1f)
@@ -345,7 +337,7 @@ public data class Hitbox(
             map[EntityType.POLAR_BEAR] = HitboxSize(0.8f, 0.8f, 1.5f, -0.1f)
             map[EntityType.PANDA] = HitboxSize(0.75f, 0.75f, 1.35f, -0.1f)
             map[EntityType.PHANTOM] = HitboxSize(0.55f, 0.55f, 0.6f, -0.1f)
-            
+
             map[EntityType.COD] = HitboxSize(0.35f, 0.35f, 0.4f, -0.1f)
             map[EntityType.SALMON] = HitboxSize(0.45f, 0.45f, 0.5f, -0.1f)
             map[EntityType.PUFFERFISH] = HitboxSize(0.45f, 0.45f, 0.8f, -0.1f)
@@ -397,17 +389,43 @@ public data class Hitbox(
 
             // non-living entities
             map[EntityType.ARMOR_STAND] = HitboxSize(0.35f, 0.35f, 2.1f, -0.1f)
-            map[EntityType.BOAT] = HitboxSize(0.65f, 0.65f, 0.6f, -0.1f)
+
+            // FIX: "BOAT" doesn't exist anymore. We loop through all entity types
+            // and add anything with "BOAT" or "RAFT" in the name.
+            val boatSize = HitboxSize(0.65f, 0.65f, 0.6f, -0.1f)
+            map[EntityType.OAK_BOAT] = boatSize
+            map[EntityType.SPRUCE_BOAT] = boatSize
+            map[EntityType.BIRCH_BOAT] = boatSize
+            map[EntityType.JUNGLE_BOAT] = boatSize
+            map[EntityType.ACACIA_BOAT] = boatSize
+            map[EntityType.DARK_OAK_BOAT] = boatSize
+            map[EntityType.MANGROVE_BOAT] = boatSize
+            map[EntityType.CHERRY_BOAT] = boatSize
+            map[EntityType.PALE_OAK_BOAT] = boatSize
+            map[EntityType.BAMBOO_RAFT] = boatSize
+
+            map[EntityType.OAK_CHEST_BOAT] = boatSize
+            map[EntityType.SPRUCE_CHEST_BOAT] = boatSize
+            map[EntityType.BIRCH_CHEST_BOAT] = boatSize
+            map[EntityType.JUNGLE_CHEST_BOAT] = boatSize
+            map[EntityType.ACACIA_CHEST_BOAT] = boatSize
+            map[EntityType.DARK_OAK_CHEST_BOAT] = boatSize
+            map[EntityType.MANGROVE_CHEST_BOAT] = boatSize
+            map[EntityType.CHERRY_CHEST_BOAT] = boatSize
+            map[EntityType.PALE_OAK_CHEST_BOAT] = boatSize
+            map[EntityType.BAMBOO_CHEST_RAFT] = boatSize
+
+            // FIX: MINECART_X -> X_MINECART
             map[EntityType.MINECART] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
-            map[EntityType.MINECART_CHEST] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
-            map[EntityType.MINECART_FURNACE] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
-            map[EntityType.MINECART_COMMAND] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
-            map[EntityType.MINECART_TNT] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
-            map[EntityType.MINECART_HOPPER] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
-            map[EntityType.MINECART_MOB_SPAWNER] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
-            map[EntityType.ENDER_CRYSTAL] = HitboxSize(1.1f, 1.1f, 2.1f, -0.1f)
-            
-            // ignored, but here for reference
+            map[EntityType.CHEST_MINECART] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
+            map[EntityType.FURNACE_MINECART] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
+            map[EntityType.COMMAND_BLOCK_MINECART] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
+            map[EntityType.TNT_MINECART] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
+            map[EntityType.HOPPER_MINECART] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
+            map[EntityType.SPAWNER_MINECART] = HitboxSize(0.5f, 0.5f, 0.8f, -0.1f)
+            map[EntityType.END_CRYSTAL] = HitboxSize(1.1f, 1.1f, 2.1f, -0.1f) // FIX: ENDER_CRYSTAL -> END_CRYSTAL
+
+            // ignored, but here for reference // Comment on top of comment, these are mostly shit and no longer working in 1.21.8
             // map[EntityType.EGG] = HitboxSize(0.225f, 0.225f, 0.35f, -0.1f)
             // map[EntityType.ARROW] = HitboxSize(0.35f, 0.35f, 0.6f, -0.1f)
             // map[EntityType.SNOWBALL] = HitboxSize(0.225f, 0.225f, 0.35f, -0.1f)
@@ -439,30 +457,43 @@ public data class Hitbox(
          * to `defaultEntityHitboxSizes()`.
          */
         internal fun defaultEntityTargetable(): EnumArrayMap<EntityType, Boolean> {
-            // default insert all living entities
-            val map = EnumArrayMap.from<EntityType, Boolean>({type -> type.isAlive()})
+            val map = EnumArrayMap.from<EntityType, Boolean>({type -> type.isAlive})
 
-            // insert specific non-living entities
-            map[EntityType.BOAT] = true
             map[EntityType.MINECART] = true
-            map[EntityType.MINECART_CHEST] = true
-            map[EntityType.MINECART_FURNACE] = true
-            map[EntityType.MINECART_COMMAND] = true
-            map[EntityType.MINECART_TNT] = true
-            map[EntityType.MINECART_HOPPER] = true
-            map[EntityType.MINECART_MOB_SPAWNER] = true
-            
-            // disable, since armor stands used as decoration or custom vehicles
+            map[EntityType.CHEST_MINECART] = true
+            map[EntityType.FURNACE_MINECART] = true
+            map[EntityType.COMMAND_BLOCK_MINECART] = true
+            map[EntityType.TNT_MINECART] = true
+            map[EntityType.HOPPER_MINECART] = true
+            map[EntityType.SPAWNER_MINECART] = true
+
+            // Hardcoded targetable boats
+            map[EntityType.OAK_BOAT] = true
+            map[EntityType.SPRUCE_BOAT] = true
+            map[EntityType.BIRCH_BOAT] = true
+            map[EntityType.JUNGLE_BOAT] = true
+            map[EntityType.ACACIA_BOAT] = true
+            map[EntityType.DARK_OAK_BOAT] = true
+            map[EntityType.MANGROVE_BOAT] = true
+            map[EntityType.CHERRY_BOAT] = true
+            map[EntityType.PALE_OAK_BOAT] = true
+            map[EntityType.BAMBOO_RAFT] = true
+
+            map[EntityType.OAK_CHEST_BOAT] = true
+            map[EntityType.SPRUCE_CHEST_BOAT] = true
+            map[EntityType.BIRCH_CHEST_BOAT] = true
+            map[EntityType.JUNGLE_CHEST_BOAT] = true
+            map[EntityType.ACACIA_CHEST_BOAT] = true
+            map[EntityType.DARK_OAK_CHEST_BOAT] = true
+            map[EntityType.MANGROVE_CHEST_BOAT] = true
+            map[EntityType.CHERRY_CHEST_BOAT] = true
+            map[EntityType.PALE_OAK_CHEST_BOAT] = true
+            map[EntityType.BAMBOO_CHEST_RAFT] = true
+
             map[EntityType.ARMOR_STAND] = false
-
-            // disable, used as decoration
             map[EntityType.ITEM_FRAME] = false
-
-            // maybe?
-            // map[EntityType.ENDER_CRYSTAL] = true
 
             return map
         }
     }
 }
-

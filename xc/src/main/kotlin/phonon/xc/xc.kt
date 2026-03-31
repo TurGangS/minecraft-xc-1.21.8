@@ -65,7 +65,6 @@ import phonon.xc.util.WorldGuard
 import phonon.xc.util.death.*
 
 // TODO: in future need to select NMS version
-import phonon.xc.nms.gun.crawl.*
 
 // ========================================================================
 // BUILT-IN ENGINE CONSTANTS TODO MAKE THESE CONFIG
@@ -387,7 +386,7 @@ public class XC(
         for ( (_playerId, crawlState) in crawling ) {
             try {
                 crawlState.cleanup()
-                crawlState.player.removePotionEffect(PotionEffectType.JUMP)
+                crawlState.player.removePotionEffect(PotionEffectType.JUMP_BOOST)
                 crawlState.player.setWalkSpeed(0.2f) // default speed
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -1149,14 +1148,14 @@ public class XC(
                         if ( entity.type == EntityType.ARMOR_STAND ) {
                             val hitboxSize = customModelHitboxes.get(entity.getUniqueId())
                             if ( hitboxSize != null ) {
-                                Hitbox.from(entity, hitboxSize).visualize(world, Particle.VILLAGER_HAPPY)
+                                Hitbox.from(entity, hitboxSize).visualize(world, Particle.HAPPY_VILLAGER)
                                 continue
                             }
                         }
         
                         // regular entities
                         if ( config.entityTargetable[entity.type] ) {
-                            Hitbox.from(entity, config.entityHitboxSizes[entity.type]).visualize(world, Particle.VILLAGER_HAPPY)
+                            Hitbox.from(entity, config.entityHitboxSizes[entity.type]).visualize(world, Particle.HAPPY_VILLAGER)
                         }
                     }
                 }

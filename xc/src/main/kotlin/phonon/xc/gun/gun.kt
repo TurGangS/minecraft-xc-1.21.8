@@ -26,6 +26,8 @@ import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.persistence.PersistentDataContainer
 import phonon.xc.XC
+import org.bukkit.NamespacedKey
+import org.bukkit.inventory.EquipmentSlotGroup
 import phonon.xc.gun.getGunHitEntityHandler
 import phonon.xc.gun.getGunHitBlockHandler
 import phonon.xc.gun.noEntityHitHandler
@@ -99,7 +101,7 @@ public interface AimDownSightsModel {
      */
     public fun create(player: Player)
 
-    
+
     companion object {
         /**
          * Send packet to player removing aim down sights model
@@ -173,7 +175,7 @@ public data class Gun(
     public val ammoMax: Int = 10,
     public val ammoPerReload: Int = -1,       // if -1, reload to max. otherwise: ammo + ammoPerReload
     public val ammoIgnore: Boolean = false,   // if true, ignores out of ammo
-    
+
     // sway
     public val swayBase: Double = 0.05,           // base sway (how random projectiles are)
     public val swaySpeedMultiplier: Double = 2.0, // sway multiplier while moving, depends on player velocity
@@ -189,7 +191,7 @@ public data class Gun(
     public val recoilAutoVertical: Double = 5.0,
     public val recoilSingleFireRamp: Double = 0.1,
     public val recoilAutoFireRamp: Double = 0.1,
-    
+
     // number of projectiles fired
     public val projectileCount: Int = 1,
 
@@ -209,7 +211,7 @@ public data class Gun(
 
     // max projectile distance in blocks before despawning
     public val projectileMaxDistance: Float = 128.0f, // = view distance of 8 chunks
-    
+
     // proximity projectiles, like flak gun rounds, explode when < distance from target
     public val projectileProximity: Float = 0.0f, // distance in blocks
 
@@ -227,7 +229,7 @@ public data class Gun(
     public val projectileDamageDropDistance: Double = 0.0,
 
     // projectile particle config
-    public val projectileParticleType: Particle = Particle.REDSTONE,
+    public val projectileParticleType: Particle = Particle.DUST,
     public val projectileParticleSize: Float = 0.35f,
     public val projectileParticleColor: Color = Color.WHITE,
     public val projectileParticleSpacing: Double = 1.5,
@@ -256,7 +258,7 @@ public data class Gun(
 
     // handler on entity hit
     public val hitEntityHandler: GunHitEntityHandler = entityDamageHitHandler,
-    
+
     // hit fire ticks (when hit handler is fire)
     public val hitFireTicks: Int = 0,
     // probability setting a hit block on fire
@@ -287,7 +289,7 @@ public data class Gun(
 
     // This contains an array of all possible combinations of
     // ammo string (e.g. "Ammo: 4/10") and item lore.
-    // Each index is: loreWithAmmo[ammo] => List<String> item lore 
+    // Each index is: loreWithAmmo[ammo] => List<String> item lore
     public val itemDescriptionForAmmo: List<List<String>>
 
     // use firing delay patterns (different delays between shots)
@@ -304,27 +306,26 @@ public data class Gun(
     /**
      * Convert this single/burst fire delay into an attribute modifier
      * attack speed (to adjust the minecraft attack cooldown bar).
-     * 
+     *
      * generic.attack_speed
      *      Determines recharging rate of attack strength.
-     *      Value is the number of full-strength attacks per second. 
-     * 
+     *      Value is the number of full-strength attacks per second.
+     *
      * https://minecraft.fandom.com/wiki/Attribute#Attributes_for_players
-     * 
+     *
      * Formula is (in seconds)
      *     delay = 1s / generic_attack_speed = 1s / (4.0 + modifier)
-     * 
+     *
      * We want to calculate modifier to get the desired delay:
      *     shootDelayMillis = 1000 / (4.0 + modifier)
      *     modifier = (1000 / shootDelayMillis) - 4.0
      */
     public val attackSpeedAttributeModifierValue: Double = (1000.0 / this.shootDelayMillis.toDouble()) - 4.0
     public val attackSpeedAttributeModifier: AttributeModifier = AttributeModifier(
-        UUID.randomUUID(),
-        "gun.attackSpeed",
+        NamespacedKey.minecraft("gun_attack_speed"), // The new unique identifier
         this.attackSpeedAttributeModifierValue,
         AttributeModifier.Operation.ADD_NUMBER,
-        EquipmentSlot.HAND,
+        EquipmentSlotGroup.MAINHAND // Or EquipmentSlotGroup.ANY if it applies to both
     )
 
     // aim down sights handler
@@ -345,7 +346,7 @@ public data class Gun(
 
             // append lore
             itemDescription.addAll(this.itemLore)
-            
+
             itemDescriptionForAmmoBuf.add(itemDescription)
         }
 
@@ -392,10 +393,10 @@ public data class Gun(
     public override fun toItemStack(xc: XC): ItemStack {
         val item = ItemStack(xc.config.materialGun, 1)
         val itemMeta = item.getItemMeta()
-        
+
         // name
         itemMeta.setDisplayName("${ChatColor.RESET}${this.itemName}")
-        
+
         // model
         itemMeta.setCustomModelData(this.itemModelDefault)
 
@@ -403,13 +404,13 @@ public data class Gun(
         val ammoCount = this.ammoMax
         val itemData = itemMeta.getPersistentDataContainer()
         itemData.set(xc.namespaceKeyItemAmmo, PersistentDataType.INTEGER, min(ammoCount, this.ammoMax))
-        
+
         // begin item description with ammo count
         val itemDescription = this.getItemDescriptionForAmmo(ammoCount)
         itemMeta.setLore(itemDescription.toList())
 
         // add item cooldown
-        itemMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, this.attackSpeedAttributeModifier)
+        itemMeta.addAttributeModifier(Attribute.ATTACK_SPEED, this.attackSpeedAttributeModifier)
 
         item.setItemMeta(itemMeta)
 
@@ -428,7 +429,7 @@ public data class Gun(
         }
     }
 
-    
+
     companion object {
         /**
          * Parse and return a Gun from a `gun.toml` file.
@@ -444,13 +445,13 @@ public data class Gun(
                 // parse toml file into properties
 
                 // item properties
-                toml.getTable("item")?.let { item -> 
+                toml.getTable("item")?.let { item ->
                     item.getString("name")?.let { properties["itemName"] = ChatColor.translateAlternateColorCodes('&', it) }
                     item.getArray("lore")?.let { properties["itemLore"] = it.toList().map { s -> s.toString() } }
                 }
 
                 // item model properties
-                toml.getTable("model")?.let { model -> 
+                toml.getTable("model")?.let { model ->
                     model.getLong("default")?.let { properties["itemModelDefault"] = it.toInt() }
                     model.getLong("empty")?.let { properties["itemModelEmpty"] = it.toInt() }
                     model.getLong("reload")?.let { properties["itemModelReload"] = it.toInt() }
@@ -458,12 +459,12 @@ public data class Gun(
                 }
 
                 // death message
-                toml.getTable("death")?.let { death -> 
+                toml.getTable("death")?.let { death ->
                     death.getString("message")?.let { properties["deathMessage"] = it }
                 }
 
                 // sounds
-                toml.getTable("sound")?.let { sound -> 
+                toml.getTable("sound")?.let { sound ->
                     sound.getString("shoot")?.let { properties["soundShoot"] = it }
                     sound.getString("reload")?.let { properties["soundReload"] = it }
                     sound.getString("empty")?.let { properties["soundEmpty"] = it }
@@ -508,7 +509,7 @@ public data class Gun(
                     }
                     shoot.getLong("burst_count")?.let { properties["burstFireCount"] = it.toInt() }
                     shoot.getLong("delay")?.let { properties["shootDelayMillis"] = it }
-                    
+
                     // parse either array or single value for delay ticks
                     if ( shoot.isArray("burst_delay") ) {
                         shoot.getArray("burst_delay")?.let { properties["burstFireDelayTickPattern"] = it.toIntArray() }
@@ -624,9 +625,9 @@ public data class Gun(
                             Particle.valueOf(ty)
                         } catch ( err: Exception ) {
                             err.printStackTrace()
-                            Particle.EXPLOSION_NORMAL
+                            Particle.EXPLOSION
                         }
-                    } ?: Particle.EXPLOSION_NORMAL
+                    } ?: Particle.EXPLOSION
                     val count = particles.getLong("count")?.toInt() ?: 6
                     val randomX = particles.getDouble("random_x") ?: 0.25
                     val randomY = particles.getDouble("random_y") ?: 0.25
@@ -669,9 +670,9 @@ public data class Gun(
                             Particle.valueOf(ty)
                         } catch ( err: Exception ) {
                             err.printStackTrace()
-                            Particle.EXPLOSION_LARGE
+                            Particle.EXPLOSION_EMITTER
                         }
-                    } ?: Particle.EXPLOSION_LARGE
+                    } ?: Particle.EXPLOSION_EMITTER
                     val count = particles.getLong("count")?.toInt() ?: 1
                     val randomX = particles.getDouble("random_x") ?: 0.0
                     val randomY = particles.getDouble("random_y") ?: 0.0
@@ -686,7 +687,7 @@ public data class Gun(
                         force = force,
                     )
                 }
-                
+
                 // sounds
                 toml.getTable("sound")?.let { sound ->
                     if ( sound.isTable("shoot") ) {
@@ -759,7 +760,7 @@ public data class Gun(
                 return null
             }
         }
-        
+
         /**
          * Load gun from string file, return null if path not found or
          * if loading encounters an error.
@@ -777,7 +778,7 @@ public data class Gun(
                 return null
             }
         }
-        
+
         /**
          * Load gun from string file, return default gun if not found.
          */

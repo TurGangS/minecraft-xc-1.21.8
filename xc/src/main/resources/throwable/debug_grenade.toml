@@ -49,7 +49,7 @@ fire_ticks = 0
 
 # Explosion particle settings
 [explosion.particles]
-type = "EXPLOSION_LARGE"
+type = "EXPLOSION_EMITTER"
 count = 8
 random_x = 1.5
 random_y = 1.5

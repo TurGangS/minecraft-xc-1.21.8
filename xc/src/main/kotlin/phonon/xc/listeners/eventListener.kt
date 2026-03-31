@@ -766,19 +766,23 @@ public class EventListener(
                 if ( armorValue != null ) {
                     when ( e.getSlotType() ) {
                         PlayerArmorChangeEvent.SlotType.CHEST -> {
-                            val itemModified = setItemArmorNMS(item, armorValue, "chest", 1, 1)
+                            // FIX: Add xc. before the call
+                            val itemModified = xc.setItemArmorNMS(item, armorValue, "chest", 1, 1)
                             player.getInventory().setChestplate(itemModified)
                         }
                         PlayerArmorChangeEvent.SlotType.FEET -> {
-                            val itemModified = setItemArmorNMS(item, armorValue, "feet", 1, 2)
+                            // FIX: Add xc. before the call
+                            val itemModified = xc.setItemArmorNMS(item, armorValue, "feet", 1, 2)
                             player.getInventory().setBoots(itemModified)
                         }
                         PlayerArmorChangeEvent.SlotType.HEAD -> {
-                            val itemModified = setItemArmorNMS(item, armorValue, "head", 2, 1)
+                            // FIX: Add xc. before the call
+                            val itemModified = xc.setItemArmorNMS(item, armorValue, "head", 2, 1)
                             player.getInventory().setHelmet(itemModified)
                         }
                         PlayerArmorChangeEvent.SlotType.LEGS -> {
-                            val itemModified = setItemArmorNMS(item, armorValue, "legs", 2, 2)
+                            // FIX: Add xc. before the call
+                            val itemModified = xc.setItemArmorNMS(item, armorValue, "legs", 2, 2)
                             player.getInventory().setLeggings(itemModified)
                         }
                     }
@@ -806,7 +810,7 @@ public class EventListener(
                 // if player swimming and has NO JUMP effect, assume this is a
                 // crawl fall damage event bug, and cancel damage
                 if ( player.isSwimming() ) {
-                    val noJumpEffect = player.getPotionEffect(PotionEffectType.JUMP)
+                    val noJumpEffect = player.getPotionEffect(PotionEffectType.JUMP_BOOST)
                     if ( noJumpEffect != null && noJumpEffect.getAmplifier() == -128 ) {
                         // println("CANCEL FALL DAMAGE")
                         e.setCancelled(true)

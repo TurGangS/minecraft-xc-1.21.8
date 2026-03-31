@@ -8,7 +8,6 @@ import kotlin.math.max
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.LivingEntity
 import org.bukkit.attribute.Attribute
-import org.bukkit.attribute.Attributable
 import org.bukkit.enchantments.Enchantment
 import phonon.xc.XC
 
@@ -58,7 +57,7 @@ public enum class DamageType {
             }
         }
     }
-} 
+}
 
 
 /**
@@ -66,8 +65,7 @@ public enum class DamageType {
  * This only factors in armor points and potion damage resistance.
  * This does not include armor toughness or armor enchant protection.
  * This also does not include location-dependent damage (like headshots).
- * 
- * TODO: make armor reduction factor a table of protection for damage
+ * * TODO: make armor reduction factor a table of protection for damage
  * types, configured for players.
  */
 public fun XC.damageAfterArmorAndResistance(
@@ -79,17 +77,17 @@ public fun XC.damageAfterArmorAndResistance(
     val xc = this
 
     // get total entity armor value
-    // note: LivingEntity extends Attributable, so attribute should always exist
-    val armor = entity.getAttribute(Attribute.GENERIC_ARMOR)?.getValue() ?: 0.0
+    // FIX: In 1.21.8, GENERIC_ARMOR was renamed to ARMOR
+    val armor = entity.getAttribute(Attribute.ARMOR)?.value ?: 0.0
 
     // get custom vehicle armor
-    val vehicle = entity.getVehicle()
+    val vehicle = entity.vehicle
     val vehicleArmor = if ( vehicle !== null && vehicle.type == EntityType.ARMOR_STAND ) {
         xc.vehiclePassengerArmor[vehicle.uniqueId] ?: 0.0
     } else {
         0.0
     }
-    
+
     // if applying vehicle armor, make minimum damage 0.0 (no damage)
     // to allow fully protected passengers. otherwise, clamp damage to 1.0
     val damage = if ( vehicleArmor > 0.0 ) {
@@ -100,7 +98,7 @@ public fun XC.damageAfterArmorAndResistance(
 
     // potion resistance/increase damage
     // UNNEEDED: vanilla will already apply potion modifier to damage
-    
+
     // double potionModifier = 1.0
     // PotionEffect dmgResistance = entity.getPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)
     // if ( dmgResistance != null ) {
@@ -116,8 +114,7 @@ public fun XC.damageAfterArmorAndResistance(
  * Calculate explosion damage after armor.
  * This is used after calculating explosion damage from
  * distance using baseExplosionDamage().
- * 
- * TODO: make armor reduction factor a table of protection for damage
+ * * TODO: make armor reduction factor a table of protection for damage
  * types, configured for players.
  */
 public fun XC.explosionDamageAfterArmor(
@@ -129,11 +126,11 @@ public fun XC.explosionDamageAfterArmor(
     val xc = this
 
     // get total entity armor value
-    // note: LivingEntity extends Attributable, so attribute should always exist
-    val armor = entity.getAttribute(Attribute.GENERIC_ARMOR)?.getValue() ?: 0.0
+    // FIX: In 1.21.8, GENERIC_ARMOR was renamed to ARMOR
+    val armor = entity.getAttribute(Attribute.ARMOR)?.value ?: 0.0
 
     // get custom vehicle armor
-    val vehicle = entity.getVehicle()
+    val vehicle = entity.vehicle
     val vehicleArmor = if ( vehicle !== null && vehicle.type == EntityType.ARMOR_STAND ) {
         xc.vehiclePassengerArmor[vehicle.uniqueId] ?: 0.0
     } else {
@@ -142,12 +139,13 @@ public fun XC.explosionDamageAfterArmor(
 
     var totalBlastProtectionLevel = 0.0
 
-    val equipment = entity.getEquipment()
+    val equipment = entity.equipment
     if ( equipment != null ) {
-        equipment.getHelmet()?.getItemMeta()?.let { it -> totalBlastProtectionLevel += it.getEnchantLevel(Enchantment.PROTECTION_EXPLOSIONS).toDouble() }
-        equipment.getChestplate()?.getItemMeta()?.let { it -> totalBlastProtectionLevel += it.getEnchantLevel(Enchantment.PROTECTION_EXPLOSIONS).toDouble() }
-        equipment.getLeggings()?.getItemMeta()?.let { it -> totalBlastProtectionLevel += it.getEnchantLevel(Enchantment.PROTECTION_EXPLOSIONS).toDouble() }
-        equipment.getBoots()?.getItemMeta()?.let { it -> totalBlastProtectionLevel += it.getEnchantLevel(Enchantment.PROTECTION_EXPLOSIONS).toDouble() }
+        // FIX: PROTECTION_EXPLOSIONS was renamed to BLAST_PROTECTION
+        equipment.helmet?.itemMeta?.let { it -> totalBlastProtectionLevel += it.getEnchantLevel(Enchantment.BLAST_PROTECTION).toDouble() }
+        equipment.chestplate?.itemMeta?.let { it -> totalBlastProtectionLevel += it.getEnchantLevel(Enchantment.BLAST_PROTECTION).toDouble() }
+        equipment.leggings?.itemMeta?.let { it -> totalBlastProtectionLevel += it.getEnchantLevel(Enchantment.BLAST_PROTECTION).toDouble() }
+        equipment.boots?.itemMeta?.let { it -> totalBlastProtectionLevel += it.getEnchantLevel(Enchantment.BLAST_PROTECTION).toDouble() }
     }
 
     // if applying vehicle armor, make minimum damage 0.0 (no damage)
