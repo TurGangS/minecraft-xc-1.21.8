@@ -7,10 +7,10 @@ Minecraft guns combat XC and vehicles XV (vehicles depends on guns).
   
 ## Since Xeth has long abandoned this project, I decided to update it to 1.21.8. Here are the few changes I've made:
 - Updated the gradle to a newer version and cleaned up dependencies.
-- Replaced some of the deprecated stuff that has only been carried to some other place or renamed.
-- The plugin runs 50% on half-deprecated methods and 50% old methods that work in 1.21.8 from bukkit api.
+- Updated some of the deprecated stuff that has only been carried to some other class or slightly renamed.
+- The plugin mainly runs on half-deprecated methods that are still supported by 1.21.8 bukkit api.
 - Abandoned the NMS stuff
 
-### I don't suggest anyone reaching out to me for help about XC or worse, XV, since the only reason why I'm putting this on hub is because it has been sitting on my PC for a solid 6 months and I'm no longer interested.
+### Feel free to ask any questions, I will help you to the best of my ability. Still, this repository is simply dead code to me and I don't suggest anyone to reach out for help about setting up XC or worse, XV.
 
 Discord: turgangs
